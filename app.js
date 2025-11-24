@@ -1,8 +1,21 @@
 const storageKey = 'design-confirm-requests';
 
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  // Fallback: simple RFC4122-ish random generator for non-secure contexts
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+    const random = (Math.random() * 16) | 0;
+    const value = char === 'x' ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
+};
+
 const defaults = [
   {
-    id: crypto.randomUUID(),
+    id: generateId(),
     title: '모바일 온보딩 리디자인',
     requester: 'Growth 팀',
     designer: '민지',
@@ -13,7 +26,7 @@ const defaults = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: crypto.randomUUID(),
+    id: generateId(),
     title: '콘텐츠 상세 페이지 QA',
     requester: '콘텐츠 스쿼드',
     designer: '준호',
@@ -24,7 +37,7 @@ const defaults = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: crypto.randomUUID(),
+    id: generateId(),
     title: '다크 모드 토큰 정리',
     requester: 'DesignOps',
     designer: '수아',
