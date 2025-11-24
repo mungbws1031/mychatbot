@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>디자인 컨펌 툴</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Design QA & Approval</p>
+      <h1>디자인 컨펌 툴</h1>
+      <p class="lede">요청 수집부터 컨펌까지 한 화면에서 관리하세요. 변경 이력과 상태를 즉시 확인할 수 있습니다.</p>
+    </div>
+    <div class="header-actions">
+      <button id="clear-data" class="ghost">모든 데이터 초기화</button>
+      <a class="primary" href="#request-form">새 요청 추가</a>
+    </div>
+  </header>
+
+  <main class="app-body">
+    <section class="panel" id="request-form">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">New request</p>
+          <h2>디자인 요청 등록</h2>
+          <p class="hint">제안서를 추가하고 상태를 컨펌 또는 수정 요청으로 업데이트하세요.</p>
+        </div>
+        <div class="badges" id="stats"></div>
+      </div>
+      <form id="design-form" class="form-grid">
+        <label>요청 제목<input name="title" required placeholder="예) 온보딩 리디자인" maxlength="80"></label>
+        <label>요청자<input name="requester" required placeholder="팀 또는 담당자" maxlength="40"></label>
+        <label>디자이너<input name="designer" required placeholder="담당 디자이너" maxlength="40"></label>
+        <label>마감일<input name="dueDate" type="date" required></label>
+        <label>자료 링크<input name="link" placeholder="Figma 또는 파일 링크"></label>
+        <label class="full-row">요청 메모<textarea name="notes" rows="2" placeholder="필요 조건 또는 검토 포인트"></textarea></label>
+        <div class="actions full-row">
+          <button type="reset" class="ghost">초기화</button>
+          <button type="submit" class="primary">요청 추가</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Approval queue</p>
+          <h2>요청 목록</h2>
+          <p class="hint">각 요청의 상태를 업데이트하고 최근 변경 시각을 확인하세요.</p>
+        </div>
+        <div class="filters">
+          <select id="status-filter">
+            <option value="all">모든 상태</option>
+            <option value="pending">대기</option>
+            <option value="changes">수정 요청</option>
+            <option value="approved">컨펌</option>
+          </select>
+          <input id="search" type="search" placeholder="제목 또는 담당자 검색">
+        </div>
+      </div>
+      <div class="table" id="request-list"></div>
+    </section>
+  </main>
+
+  <template id="row-template">
+    <article class="row">
+      <div class="row-main">
+        <div class="row-title">
+          <h3 class="title"></h3>
+          <span class="badge status"></span>
+        </div>
+        <p class="meta"></p>
+        <p class="notes"></p>
+        <div class="links"></div>
+      </div>
+      <div class="row-actions">
+        <button class="ghost request-changes">수정 요청</button>
+        <button class="ghost pending">대기</button>
+        <button class="primary approve">컨펌</button>
+        <button class="icon delete" aria-label="삭제">✕</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
