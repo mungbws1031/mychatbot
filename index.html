@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>스케쥴러 | Schedule Maestro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { font-family: 'Pretendard', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); }
+    @keyframes pop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes slideUp { 0% { transform: translateY(8px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+    .animate-pop { animation: pop 0.22s ease-out; }
+    .animate-slide-up { animation: slideUp 0.35s ease-out; }
+  </style>
+</head>
+<body class="h-full bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-slate-100">
+  <div class="min-h-full px-4 py-6 sm:px-8 lg:px-12">
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="text-sm text-slate-400">AI가 보조하는 일정 · 할일 관리</p>
+        <h1 class="text-3xl font-bold text-white sm:text-4xl">Schedule Maestro</h1>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-sm text-emerald-200 ring-1 ring-emerald-400/30">로컬에 자동 저장</span>
+        <span class="rounded-full bg-indigo-500/10 px-3 py-1 text-sm text-indigo-200 ring-1 ring-indigo-400/30">AI 제안 내장</span>
+        <span class="rounded-full bg-amber-500/10 px-3 py-1 text-sm text-amber-200 ring-1 ring-amber-400/30">내부 알림 지원</span>
+      </div>
+    </header>
+
+    <main class="mt-6 grid gap-6 lg:grid-cols-[1.25fr_1fr]">
+      <section class="glass rounded-3xl border border-white/10 p-5 shadow-2xl shadow-emerald-900/20">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p class="text-sm text-slate-400">월간 보기</p>
+            <div class="flex items-center gap-3 text-2xl font-semibold text-white">
+              <button id="prevMonth" class="rounded-full bg-white/5 p-2 text-slate-200 transition hover:bg-white/10">◀</button>
+              <span id="currentMonth"></span>
+              <button id="nextMonth" class="rounded-full bg-white/5 p-2 text-slate-200 transition hover:bg-white/10">▶</button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 rounded-full bg-white/5 px-3 py-2 text-xs text-slate-300 ring-1 ring-white/10">
+            <span class="inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
+            <span>일정 있음</span>
+            <span class="ml-3 inline-flex h-2 w-2 rounded-full bg-sky-400"></span>
+            <span>오늘</span>
+          </div>
+        </div>
+        <div id="calendar" class="mt-4 grid grid-cols-7 gap-2 text-center text-sm text-slate-300"></div>
+      </section>
+
+      <section class="glass rounded-3xl border border-white/10 p-5 shadow-2xl shadow-indigo-900/20">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-slate-400">선택한 날짜</p>
+            <h2 id="selectedDateLabel" class="text-2xl font-semibold text-white"></h2>
+          </div>
+          <span class="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-300 ring-1 ring-white/10">일정 관리</span>
+        </div>
+
+        <form id="eventForm" class="mt-4 space-y-3 rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="flex flex-col gap-1 text-sm text-slate-200">
+              제목
+              <input required name="title" class="w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-white placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none" placeholder="예: 팀 미팅" />
+            </label>
+            <label class="flex flex-col gap-1 text-sm text-slate-200">
+              날짜
+              <input required name="date" type="date" class="w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-white placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none" />
+            </label>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="flex flex-col gap-1 text-sm text-slate-200">
+              시작 시간
+              <input name="time" type="time" class="w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-white placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none" />
+            </label>
+            <label class="flex flex-col gap-1 text-sm text-slate-200">
+              유형
+              <select name="type" class="w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-white focus:border-emerald-400 focus:outline-none">
+                <option value="general">일반</option>
+                <option value="meeting">회의</option>
+                <option value="workout">운동</option>
+                <option value="study">공부</option>
+                <option value="travel">여행 준비</option>
+              </select>
+            </label>
+          </div>
+          <label class="flex flex-col gap-1 text-sm text-slate-200">
+            메모
+            <textarea name="notes" rows="2" class="w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-white placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none" placeholder="중요 포인트나 체크리스트"></textarea>
+          </label>
+          <div>
+            <div class="mb-2 flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">AI 제안</div>
+            <div id="suggestionChips" class="flex flex-wrap gap-2"></div>
+            <p class="mt-1 text-xs text-slate-400">클릭하면 할일 목록에 바로 추가돼요.</p>
+          </div>
+          <div class="flex flex-wrap justify-end gap-2">
+            <button type="reset" class="rounded-xl px-4 py-2 text-sm text-slate-200 transition hover:text-white">초기화</button>
+            <button id="submitBtn" class="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-4 py-2 text-sm font-semibold text-emerald-950 shadow-lg shadow-emerald-900/30 transition hover:from-emerald-400 hover:to-teal-300">일정 저장</button>
+          </div>
+        </form>
+
+        <div class="mt-4 space-y-3" id="eventList"></div>
+      </section>
+
+      <section class="glass rounded-3xl border border-white/10 p-5 shadow-2xl shadow-amber-900/20 lg:col-span-2">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-slate-400">할일</p>
+            <h2 class="text-2xl font-semibold text-white">오늘부터 이어지는 할일 목록</h2>
+          </div>
+          <span class="rounded-full bg-amber-500/10 px-3 py-1 text-xs text-amber-200 ring-1 ring-amber-400/30">체크하면 완료 처리</span>
+        </div>
+        <form id="todoForm" class="mt-4 flex flex-col gap-3 sm:flex-row">
+          <input name="todo" required class="flex-1 rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none" placeholder="할일을 입력하세요" />
+          <button class="rounded-xl bg-gradient-to-r from-amber-500 to-orange-400 px-5 py-3 text-sm font-semibold text-amber-950 shadow-lg shadow-amber-900/30 transition hover:from-amber-400 hover:to-orange-300">추가</button>
+        </form>
+        <div id="todoList" class="mt-4 space-y-2"></div>
+      </section>
+    </main>
+
+    <div id="toastContainer" class="fixed right-4 top-4 z-50 flex w-80 flex-col gap-3"></div>
+  </div>
+
+  <script>
+    const STORAGE_KEYS = {
+      events: 'scheduler-events',
+      todos: 'scheduler-todos',
+      notified: 'scheduler-notified'
+    };
+
+    const suggestionBank = {
+      general: ['중요도와 마감시간 확인하기', '관련 자료 링크를 메모에 첨부하기', '10분 전 알림 체크'],
+      meeting: ['안건 목록 작성', '필요 자료 인쇄 또는 정리', '참석자에게 미리 아젠다 공유', '회의록 템플릿 준비', '화상 링크 테스트'],
+      workout: ['운동복과 신발 준비', '워밍업 5분', '운동 후 스트레칭', '물병 챙기기', '식단 기록하기'],
+      study: ['학습 목표 3개 설정', '30분마다 짧은 휴식', '핵심 개념 요약 정리', '기출문제 3개 풀기', '오늘 배운 내용 복습'],
+      travel: ['필수 짐 포장 체크', '여권/신분증 확인', '이동 경로 & 티켓 저장', '충전기와 멀티탭 챙기기', '숙소 체크인 시간 확인']
+    };
+
+    const calendarEl = document.getElementById('calendar');
+    const currentMonthLabel = document.getElementById('currentMonth');
+    const selectedDateLabel = document.getElementById('selectedDateLabel');
+    const eventListEl = document.getElementById('eventList');
+    const suggestionChipsEl = document.getElementById('suggestionChips');
+    const eventForm = document.getElementById('eventForm');
+    const todoForm = document.getElementById('todoForm');
+    const todoListEl = document.getElementById('todoList');
+    const toastContainer = document.getElementById('toastContainer');
+
+    let events = loadFromStorage(STORAGE_KEYS.events) || [];
+    let todos = loadFromStorage(STORAGE_KEYS.todos) || [];
+    const notifiedMap = loadFromStorage(STORAGE_KEYS.notified) || {};
+
+    let currentMonth = new Date();
+    let selectedDate = formatDate(currentMonth);
+    let editingId = null;
+
+    function loadFromStorage(key) {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    }
+    function saveToStorage(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function formatDate(date) {
+      const d = new Date(date);
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${d.getFullYear()}-${m}-${day}`;
+    }
+
+    function renderCalendar() {
+      calendarEl.innerHTML = '';
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startWeekDay = firstDay.getDay();
+      const todayStr = formatDate(new Date());
+
+      currentMonthLabel.textContent = `${year}년 ${month + 1}월`;
+
+      ['일','월','화','수','목','금','토'].forEach(d => {
+        const h = document.createElement('div');
+        h.className = 'text-xs uppercase tracking-wide text-slate-400';
+        h.textContent = d;
+        calendarEl.appendChild(h);
+      });
+
+      for (let i = 0; i < startWeekDay; i++) {
+        const empty = document.createElement('div');
+        calendarEl.appendChild(empty);
+      }
+
+      for (let day = 1; day <= lastDay.getDate(); day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const hasEvent = events.some(e => e.date === dateStr);
+        const isToday = dateStr === todayStr;
+        const isSelected = dateStr === selectedDate;
+        const btn = document.createElement('button');
+        btn.className = `group relative h-20 rounded-2xl border border-white/5 bg-white/5 p-2 text-left transition hover:-translate-y-0.5 hover:border-emerald-400/50 hover:bg-emerald-500/5 ${isSelected ? 'ring-2 ring-emerald-400/70' : ''}`;
+        btn.innerHTML = `
+          <div class="flex items-center justify-between text-sm font-semibold text-white">
+            <span>${day}</span>
+            ${isToday ? '<span class="h-2 w-2 rounded-full bg-sky-400"></span>' : ''}
+          </div>
+          <div class="mt-3 flex items-center gap-2">
+            ${hasEvent ? '<span class="inline-flex h-2 w-2 rounded-full bg-emerald-400"></span><span class="text-[11px] text-emerald-200">일정 있음</span>' : '<span class="text-[11px] text-slate-500">여유로움</span>'}
+          </div>`;
+        btn.addEventListener('click', () => {
+          selectedDate = dateStr;
+          eventForm.date.value = dateStr;
+          renderSelectedDate();
+          renderCalendar();
+        });
+        calendarEl.appendChild(btn);
+      }
+    }
+
+    function renderSelectedDate() {
+      selectedDateLabel.textContent = new Date(selectedDate).toLocaleDateString('ko-KR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      renderEventList();
+    }
+
+    function renderEventList() {
+      const dailyEvents = events.filter(e => e.date === selectedDate).sort((a,b) => (a.time||'').localeCompare(b.time||''));
+      eventListEl.innerHTML = '';
+      if (!dailyEvents.length) {
+        eventListEl.innerHTML = '<div class="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-6 text-center text-sm text-slate-400">아직 일정이 없습니다. 위의 폼에서 추가해보세요.</div>';
+        return;
+      }
+      dailyEvents.forEach(ev => {
+        const card = document.createElement('div');
+        card.className = 'animate-pop rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg shadow-emerald-900/20';
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-lg font-semibold text-white">${ev.title}</span>
+                <span class="rounded-full bg-white/10 px-2 py-1 text-[11px] uppercase tracking-wide text-emerald-200">${ev.type}</span>
+              </div>
+              <p class="mt-1 text-sm text-slate-300">${ev.time ? ev.time : '시간 미정'}</p>
+              ${ev.notes ? `<p class="mt-2 text-sm text-slate-200">${ev.notes}</p>` : ''}
+            </div>
+            <div class="flex flex-col gap-2 text-xs text-slate-300">
+              <button class="rounded-lg bg-white/10 px-3 py-2 transition hover:bg-emerald-500/20" data-action="edit">수정</button>
+              <button class="rounded-lg bg-white/10 px-3 py-2 text-rose-200 transition hover:bg-rose-500/20" data-action="delete">삭제</button>
+            </div>
+          </div>`;
+        card.querySelector('[data-action="edit"]').addEventListener('click', () => startEdit(ev.id));
+        card.querySelector('[data-action="delete"]').addEventListener('click', () => deleteEvent(ev.id));
+        eventListEl.appendChild(card);
+      });
+    }
+
+    function renderSuggestions(type) {
+      suggestionChipsEl.innerHTML = '';
+      const suggestions = suggestionBank[type] || suggestionBank.general;
+      suggestions.forEach(text => {
+        const chip = document.createElement('button');
+        chip.className = 'animate-slide-up rounded-full bg-white/10 px-3 py-2 text-xs text-slate-100 ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:bg-amber-500/20 hover:text-amber-50';
+        chip.textContent = text;
+        chip.addEventListener('click', () => addTodo(text));
+        suggestionChipsEl.appendChild(chip);
+      });
+    }
+
+    function addTodo(text) {
+      const todo = { id: crypto.randomUUID(), text, done: false };
+      todos.unshift(todo);
+      saveToStorage(STORAGE_KEYS.todos, todos);
+      renderTodos();
+      toast('할일 추가', 'AI 제안을 할일 목록에 추가했습니다.');
+    }
+
+    function renderTodos() {
+      todoListEl.innerHTML = '';
+      if (!todos.length) {
+        todoListEl.innerHTML = '<div class="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-6 text-center text-sm text-slate-400">할일을 추가해 보세요.</div>';
+        return;
+      }
+      todos.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white shadow-sm shadow-amber-900/20';
+        row.innerHTML = `
+          <label class="flex flex-1 items-center gap-3">
+            <input type="checkbox" class="h-4 w-4 rounded border-white/20 bg-white/10" ${item.done ? 'checked' : ''} />
+            <span class="${item.done ? 'text-slate-400 line-through' : ''}">${item.text}</span>
+          </label>
+          <button class="rounded-lg px-2 py-1 text-xs text-rose-200 transition hover:bg-rose-500/10">삭제</button>`;
+        const checkbox = row.querySelector('input');
+        checkbox.addEventListener('change', () => {
+          item.done = checkbox.checked;
+          saveToStorage(STORAGE_KEYS.todos, todos);
+          renderTodos();
+        });
+        row.querySelector('button').addEventListener('click', () => {
+          todos = todos.filter(t => t.id !== item.id);
+          saveToStorage(STORAGE_KEYS.todos, todos);
+          renderTodos();
+        });
+        todoListEl.appendChild(row);
+      });
+    }
+
+    eventForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(eventForm);
+      const payload = {
+        id: editingId || crypto.randomUUID(),
+        title: data.get('title').trim(),
+        date: data.get('date'),
+        time: data.get('time'),
+        type: data.get('type'),
+        notes: data.get('notes').trim()
+      };
+      if (editingId) {
+        events = events.map(ev => ev.id === editingId ? payload : ev);
+        toast('일정 수정', '선택한 일정이 업데이트되었습니다.');
+      } else {
+        events.push(payload);
+        toast('일정 추가', '달력에 일정이 추가되었습니다.');
+      }
+      editingId = null;
+      eventForm.reset();
+      eventForm.date.value = selectedDate;
+      renderSuggestions(eventForm.type.value);
+      saveToStorage(STORAGE_KEYS.events, events);
+      renderCalendar();
+      renderSelectedDate();
+    });
+
+    eventForm.addEventListener('reset', () => {
+      editingId = null;
+      eventForm.date.value = selectedDate;
+      renderSuggestions(eventForm.type.value);
+    });
+
+    eventForm.type.addEventListener('change', (e) => {
+      renderSuggestions(e.target.value);
+    });
+
+    todoForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(todoForm);
+      const text = data.get('todo').trim();
+      if (!text) return;
+      addTodo(text);
+      todoForm.reset();
+    });
+
+    document.getElementById('prevMonth').addEventListener('click', () => {
+      currentMonth.setMonth(currentMonth.getMonth() - 1);
+      renderCalendar();
+    });
+    document.getElementById('nextMonth').addEventListener('click', () => {
+      currentMonth.setMonth(currentMonth.getMonth() + 1);
+      renderCalendar();
+    });
+
+    function startEdit(id) {
+      const ev = events.find(e => e.id === id);
+      if (!ev) return;
+      editingId = id;
+      eventForm.title.value = ev.title;
+      eventForm.date.value = ev.date;
+      eventForm.time.value = ev.time;
+      eventForm.type.value = ev.type;
+      eventForm.notes.value = ev.notes;
+      renderSuggestions(ev.type);
+      eventForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      selectedDate = ev.date;
+      renderSelectedDate();
+      renderCalendar();
+    }
+
+    function deleteEvent(id) {
+      events = events.filter(ev => ev.id !== id);
+      saveToStorage(STORAGE_KEYS.events, events);
+      toast('삭제됨', '일정이 삭제되었습니다.');
+      renderCalendar();
+      renderSelectedDate();
+    }
+
+    function toast(title, body) {
+      const wrap = document.createElement('div');
+      wrap.className = 'animate-slide-up rounded-2xl border border-white/10 bg-slate-900/90 p-4 shadow-xl shadow-emerald-900/40';
+      wrap.innerHTML = `
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-sm font-semibold text-white">${title}</p>
+            <p class="text-xs text-slate-300">${body}</p>
+          </div>
+          <span class="text-lg">✨</span>
+        </div>`;
+      toastContainer.appendChild(wrap);
+      setTimeout(() => wrap.remove(), 3800);
+    }
+
+    function checkReminders() {
+      const now = new Date();
+      const todayStr = formatDate(now);
+      events.forEach(ev => {
+        if (!ev.time || ev.date !== todayStr) return;
+        const key = `${ev.id}-${ev.date}-${ev.time}`;
+        const eventTime = new Date(`${ev.date}T${ev.time}`);
+        const diff = now - eventTime;
+        if (diff >= 0 && diff < 60000 && !notifiedMap[key]) {
+          notifiedMap[key] = true;
+          saveToStorage(STORAGE_KEYS.notified, notifiedMap);
+          toast('일정 시작', `${ev.title} 일정이 지금 시작됩니다.`);
+        }
+      });
+    }
+
+    function init() {
+      renderSuggestions(eventForm.type.value);
+      renderCalendar();
+      renderSelectedDate();
+      renderTodos();
+      eventForm.date.value = selectedDate;
+      setInterval(checkReminders, 30000);
+      checkReminders();
+    }
+
+    init();
+  </script>
+</body>
+</html>
